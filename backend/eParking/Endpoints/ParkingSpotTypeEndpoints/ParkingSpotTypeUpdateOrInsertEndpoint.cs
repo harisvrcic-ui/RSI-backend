@@ -47,7 +47,7 @@ public class ParkingSpotTypeUpdateOrInsertEndpoint(ApplicationDbContext db) : My
         public int ID { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public int PriceMultiplier { get; set; }
+        public decimal PriceMultiplier { get; set; }
     }
 }
 

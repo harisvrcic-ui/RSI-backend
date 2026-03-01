@@ -17,26 +17,32 @@ public class CarsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     public override async Task<MyPagedList<CarsGetAllResponse>> HandleAsync([FromQuery] CarsGetAllRequest request, CancellationToken cancellationToken = default)
     {
         var query = db.Cars
+            .Join(db.Brands, car => car.BrandId, brand => brand.ID, (car, brand) => new { car, brand })
             .AsQueryable();
 
-        // Filter by search query
+        // Filter by search query (model, brand name, license plate)
         if (!string.IsNullOrWhiteSpace(request.Q))
         {
-            //query = query.Where(c => c.Name.Contains(request.Q));
+            var q = request.Q.Trim();
+            query = query.Where(c =>
+                (c.car.Model != null && c.car.Model.Contains(q)) ||
+                (c.brand.Name != null && c.brand.Name.Contains(q)) ||
+                (c.car.LicensePlate != null && c.car.LicensePlate.Contains(q)));
         }
 
         // Project to result type
-        var projectedQuery = query.Select(c => new CarsGetAllResponse
+        var projectedQuery = query.Select(x => new CarsGetAllResponse
         {
-            ID = c.ID,
-            BrandId = c.BrandId,
-            ColorId = c.ColorId,
-            UserId = c.UserId,
-            Model = c.Model,
-            LicensePlate = c.LicensePlate,
-            YearOfManufacture = c.YearOfManufacture,
-            Picture = c.Picture,
-            IsActive = c.IsActive
+            ID = x.car.ID,
+            BrandId = x.car.BrandId,
+            BrandName = x.brand.Name,
+            ColorId = x.car.ColorId,
+            UserId = x.car.UserId,
+            Model = x.car.Model,
+            LicensePlate = x.car.LicensePlate,
+            YearOfManufacture = x.car.YearOfManufacture,
+            Picture = x.car.Picture,
+            IsActive = x.car.IsActive
         });
 
         // Create paginated response with filter
@@ -47,13 +53,15 @@ public class CarsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
 
     public class CarsGetAllRequest : MyPagedRequest
     {
-        public string? Q { get; set; } = string.Empty;
+        [FromQuery(Name = "q")]
+        public string? Q { get; set; }
     }
 
     public class CarsGetAllResponse
     {
         public int ID { get; set; }
         public int BrandId { get; set; }
+        public string BrandName { get; set; } = string.Empty;
         public int ColorId { get; set; }
         public int UserId { get; set; }
         public string Model { get; set; } = string.Empty;

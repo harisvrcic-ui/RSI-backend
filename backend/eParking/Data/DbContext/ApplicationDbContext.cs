@@ -1,4 +1,4 @@
-﻿using eParking.Data.Models;
+using eParking.Data.Models;
 using eParking.Helper;
 using eParking.Helper.BaseClasses;
 using eParking.Services;
@@ -54,6 +54,10 @@ public partial class ApplicationDbContext(DbContextOptions options, IHttpContext
             .WithMany()
             .HasForeignKey(c => c.CountryId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ParkingSpotType>()
+            .Property(p => p.PriceMultiplier)
+            .HasPrecision(18, 2);
 
         // Seed initial data
         modelBuilder.SeedData();

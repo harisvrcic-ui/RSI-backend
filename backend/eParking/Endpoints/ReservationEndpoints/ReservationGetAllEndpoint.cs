@@ -19,10 +19,25 @@ public class ReservationGetAllEndpoint(ApplicationDbContext db) : MyEndpointBase
         var query = db.Reservations
             .AsQueryable();
 
-        // Filter by search query
-        if (!string.IsNullOrWhiteSpace(request.Q))
+        if (request.UserId.HasValue)
+            query = query.Where(r => db.Cars.Any(c => c.ID == r.CarID && c.UserId == request.UserId.Value));
+
+        if (request.OnlyActive == true)
+            query = query.Where(r => r.EndDate >= DateTime.UtcNow);
+
+        var q = request.Q?.Trim();
+        if (!string.IsNullOrWhiteSpace(q))
         {
-            //query = query.Where(c => c.Name.Contains(request.Q));
+            if (int.TryParse(q, out var idVal))
+                query = query.Where(r => r.ID == idVal);
+            else
+            {
+                var qLower = q.ToLower();
+                query = query.Where(r =>
+                    db.ParkingSpots.Any(ps => ps.ID == r.ParkingSpotID && ((ps.DisplayNameSearch != null && ps.DisplayNameSearch.Contains(qLower)) || (ps.DisplayName != null && ps.DisplayName.ToLower().Contains(qLower)))) ||
+                    db.ReservationTypes.Any(rt => rt.ID == r.ReservationTypeID && rt.Name != null && rt.Name.ToLower().Contains(qLower)) ||
+                    db.Cars.Any(c => c.ID == r.CarID && ((c.Model != null && c.Model.ToLower().Contains(qLower)) || (c.LicensePlate != null && c.LicensePlate.ToLower().Contains(qLower)))));
+            }
         }
 
         // Project to result type
@@ -45,7 +60,14 @@ public class ReservationGetAllEndpoint(ApplicationDbContext db) : MyEndpointBase
 
     public class ReservationGetAllRequest : MyPagedRequest
     {
+        [FromQuery(Name = "q")]
         public string? Q { get; set; } = string.Empty;
+
+        [FromQuery(Name = "userId")]
+        public int? UserId { get; set; }
+
+        [FromQuery(Name = "onlyActive")]
+        public bool? OnlyActive { get; set; }
     }
 
     public class ReservationGetAllResponse

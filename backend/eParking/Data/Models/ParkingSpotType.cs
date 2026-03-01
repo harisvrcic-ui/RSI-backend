@@ -1,4 +1,4 @@
-﻿using eParking.Helper.BaseClasses;
+using eParking.Helper.BaseClasses;
 using System;
 
 namespace eParking.Data.Models
@@ -7,7 +7,7 @@ namespace eParking.Data.Models
     {
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public int PriceMultiplier { get; set; }
+        public decimal PriceMultiplier { get; set; }
 
     }
 }

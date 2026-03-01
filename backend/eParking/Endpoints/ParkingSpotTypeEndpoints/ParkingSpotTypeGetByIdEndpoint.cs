@@ -39,7 +39,7 @@ public class ParkingSpotTypeGetByIdEndpoint(ApplicationDbContext db) : MyEndpoin
         public int ID { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; }
-        public int PriceMultiplier { get; set; }
+        public decimal PriceMultiplier { get; set; }
     }
 }
 

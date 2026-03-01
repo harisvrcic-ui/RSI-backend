@@ -22,7 +22,8 @@ public class ParkingZonesGetAllEndpoint(ApplicationDbContext db) : MyEndpointBas
         // Filter by search query
         if (!string.IsNullOrWhiteSpace(request.Q))
         {
-            //query = query.Where(c => c.Name.Contains(request.Q));
+            var q = request.Q.Trim();
+            query = query.Where(c => c.Name != null && c.Name.Contains(q));
         }
 
         // Project to result type
@@ -41,6 +42,7 @@ public class ParkingZonesGetAllEndpoint(ApplicationDbContext db) : MyEndpointBas
 
     public class ParkingZonesGetAllRequest : MyPagedRequest
     {
+        [FromQuery(Name = "q")]
         public string? Q { get; set; } = string.Empty;
     }
 

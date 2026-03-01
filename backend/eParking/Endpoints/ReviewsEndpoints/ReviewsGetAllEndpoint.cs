@@ -18,10 +18,13 @@ public class ReviewsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsyn
         var query = db.Reviews
             .AsQueryable();
 
-        // Filter by search query
-        if (!string.IsNullOrWhiteSpace(request.Q))
+        var q = request.Q?.Trim();
+        if (!string.IsNullOrWhiteSpace(q))
         {
-            //query = query.Where(c => c.Name.Contains(request.Q));
+            if (int.TryParse(q, out var idVal))
+                query = query.Where(r => r.ID == idVal);
+            else
+                query = query.Where(r => r.Comment != null && r.Comment.Contains(q));
         }
 
         // Project to result type
@@ -42,6 +45,7 @@ public class ReviewsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsyn
 
     public class ReviewsGetAllRequest : MyPagedRequest
     {
+        [FromQuery(Name = "q")]
         public string? Q { get; set; } = string.Empty;
     }
 
