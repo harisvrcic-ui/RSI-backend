@@ -1,4 +1,4 @@
-﻿using eParking.Data.Models;
+using eParking.Data.Models;
 using eParking.Helper;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -209,23 +209,22 @@ namespace eParking.Data
 
 
             modelBuilder.Entity<ParkingSpotType>().HasData(
-              new ParkingSpotType { ID = 1, Name = "Regular" },
-              new ParkingSpotType { ID = 2, Name = "Disabled" },
-              new ParkingSpotType { ID = 3, Name = "Compact" },
-              new ParkingSpotType { ID = 4, Name = "Electric" },
-              new ParkingSpotType { ID = 5, Name = "Large" }
+              new ParkingSpotType { ID = 1, Name = "Regular", PriceMultiplier = 1.0m },
+              new ParkingSpotType { ID = 2, Name = "Disabled", PriceMultiplier = 0.5m },
+              new ParkingSpotType { ID = 3, Name = "Compact", PriceMultiplier = 0.9m },
+              new ParkingSpotType { ID = 4, Name = "Electric", PriceMultiplier = 1.3m },
+              new ParkingSpotType { ID = 5, Name = "Large", PriceMultiplier = 1.2m }
           );
 
-            modelBuilder.Entity<ParkingSpots>().HasData(
-             new ParkingSpots { ID = 1, ParkingNumber = 1, ParkingSpotTypeId = 1, ZoneId = 1 }
-             //new ParkingSpots { ID = 2, ParkingNumber = 2, ParkingSpotTypeId = 2 },
-             //new ParkingSpots { ID = 3, ParkingNumber = 3, ParkingSpotTypeId = 3 },
-             //new ParkingSpots { ID = 4, ParkingNumber = 4, ParkingSpotTypeId = 4 },
-             //new ParkingSpots { ID = 5, ParkingNumber = 5, ParkingSpotTypeId = 5 }
-         );
+            // U bazi: Zone 1 i Zone 2 (Zone 1 = Vijećnica+Baščaršija, Zone 2 = Aria)
             modelBuilder.Entity<ParkingZones>().HasData(
-             new ParkingZones { ID = 1, Name = "Nulta zona" }
-         
+             new ParkingZones { ID = 1, Name = "Zone 1" },
+             new ParkingZones { ID = 2, Name = "Zone 2" }
+         );
+            modelBuilder.Entity<ParkingSpots>().HasData(
+             new ParkingSpots { ID = 1, ParkingNumber = 1, ParkingSpotTypeId = 1, ZoneId = 1, DisplayName = "Vijećnica", DisplayNameSearch = "vijecnica" },
+             new ParkingSpots { ID = 2, ParkingNumber = 2, ParkingSpotTypeId = 1, ZoneId = 1, DisplayName = "Baščaršija", DisplayNameSearch = "bascarsija" },
+             new ParkingSpots { ID = 3, ParkingNumber = 3, ParkingSpotTypeId = 1, ZoneId = 2, DisplayName = "Aria mall", DisplayNameSearch = "aria mall" }
          );
             modelBuilder.Entity<Reservations>().HasData(
              new Reservations
@@ -262,7 +261,7 @@ namespace eParking.Data
                   new Cars
                   {
                       ID = 1,
-                      BrandId = 1,
+                      BrandId = 3,
                       ColorId = 1,
                       UserId = 1,
                       Model = "Golf 7",

@@ -1,49 +1,113 @@
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using static eParking.Endpoints.CountryEndpoints.CountryGetAllEndpoint;
 using static eParking.Endpoints.ParkingSpotsEndpoints.ParkingSpotsGetAllEndpoint;
 
 namespace eParking.Endpoints.ParkingSpotsEndpoints;
 
 [Route("ParkingSpots")]
-public class ParkingSpotsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
+public class ParkingSpotsGetAllEndpoint(ApplicationDbContext db, IHttpContextAccessor httpContext) : MyEndpointBaseAsync
     .WithRequest<ParkingSpotsGetAllRequest>
     .WithResult<MyPagedList<ParkingSpotsGetAllResponse>>
 {
     [HttpGet("filter")]
     public override async Task<MyPagedList<ParkingSpotsGetAllResponse>> HandleAsync([FromQuery] ParkingSpotsGetAllRequest request, CancellationToken cancellationToken = default)
     {
-        var query = db.ParkingSpots
-            .AsQueryable();
+        var query = from spot in db.ParkingSpots
+                    join zone in db.ParkingZones on spot.ZoneId equals zone.ID
+                    select new { spot, zone };
 
-        // Filter by search query
-        if (!string.IsNullOrWhiteSpace(request.Q))
+        // Filter by name: čitaj iz query stringa ako binding ne upali; koristi DisplayNameSearch (normalizirano, bez đ/š/č)
+        var nameFromQuery = httpContext.HttpContext?.Request.Query["name"].FirstOrDefault();
+        var searchName = !string.IsNullOrWhiteSpace(request.Name)
+            ? request.Name.Trim()
+            : nameFromQuery?.Trim();
+        if (!string.IsNullOrWhiteSpace(searchName))
         {
-            //query = query.Where(c => c.Name.Contains(request.Q));
+            var name = searchName.ToLowerInvariant()
+                .Replace("š", "s").Replace("č", "c").Replace("ć", "c").Replace("ž", "z").Replace("đ", "d");
+            query = query.Where(x =>
+                (x.spot.DisplayNameSearch != null && x.spot.DisplayNameSearch.Contains(name)) ||
+                (x.spot.DisplayName != null && x.spot.DisplayName.ToLower().Contains(searchName.ToLower())) ||
+                x.zone.Name.ToLower().Contains(name) ||
+                x.spot.ParkingNumber.ToString().Contains(name));
         }
 
-        // Project to result type
-        var projectedQuery = query.Select(c => new ParkingSpotsGetAllResponse
+        if (!string.IsNullOrWhiteSpace(request.Q))
         {
-            ID = c.ID,
-            ParkingNumber = c.ParkingNumber,
-            ParkingSpotTypeId = c.ParkingSpotTypeId,
-            ZoneId = c.ZoneId,
-            IsActive = c.IsActive
+            var q = request.Q.Trim().ToLowerInvariant()
+                .Replace("š", "s").Replace("č", "c").Replace("ć", "c").Replace("ž", "z").Replace("đ", "d");
+            query = query.Where(x =>
+                (x.spot.DisplayNameSearch != null && x.spot.DisplayNameSearch.Contains(q)) ||
+                (x.spot.DisplayName != null && x.spot.DisplayName.ToLower().Contains(request.Q.Trim().ToLower())) ||
+                x.zone.Name.ToLower().Contains(q) ||
+                x.spot.ParkingNumber.ToString().Contains(q));
+        }
+
+        // Filter by zone: čitaj zoneGroup iz query stringa (binding na request ponekad ne upali)
+        var zoneGroupFromQuery = httpContext.HttpContext?.Request.Query["zoneGroup"].FirstOrDefault();
+        int? zoneFilter = null;
+        if (!string.IsNullOrEmpty(zoneGroupFromQuery) && int.TryParse(zoneGroupFromQuery, out var parsed))
+            zoneFilter = parsed;
+        else
+            zoneFilter = request.ZoneGroup;
+        if (zoneFilter.HasValue && zoneFilter.Value > 0)
+            query = query.Where(x => x.spot.ZoneId == zoneFilter!.Value);
+        // Filter by exact ZoneId (optional, for admin or direct zone filter)
+        else if (request.ZoneId.HasValue && request.ZoneId.Value > 0)
+            query = query.Where(x => x.spot.ZoneId == request.ZoneId.Value);
+
+        // Only available (IsActive)
+        if (request.OnlyAvailable == true)
+            query = query.Where(x => x.spot.IsActive);
+
+        // Open now – no DB field yet; reserved for future working-hours support
+        if (request.OpenNow == true)
+        {
+            // When WorkingHours exist: query = query.Where(x => IsOpenNow(x.spot));
+            // For now no filter
+        }
+
+        // Project to response (include ZoneName and DisplayName for display/sort/search)
+        var projectedQuery = query.Select(x => new ParkingSpotsGetAllResponse
+        {
+            ID = x.spot.ID,
+            ParkingNumber = x.spot.ParkingNumber,
+            ParkingSpotTypeId = x.spot.ParkingSpotTypeId,
+            ZoneId = x.spot.ZoneId,
+            ZoneName = x.zone.Name,
+            DisplayName = x.spot.DisplayName,
+            IsActive = x.spot.IsActive
         });
 
-        // Create paginated response with filter
-        var result = await MyPagedList<ParkingSpotsGetAllResponse>.CreateAsync(projectedQuery, request, cancellationToken);
+        // Sort
+        var sortBy = (request.SortBy ?? "").Trim().ToLower();
+        projectedQuery = sortBy switch
+        {
+            "name" => projectedQuery.OrderBy(x => x.DisplayName ?? x.ZoneName).ThenBy(x => x.ParkingNumber),
+            "price" => projectedQuery.OrderBy(x => x.ParkingNumber),
+            "availability" => projectedQuery.OrderByDescending(x => x.IsActive).ThenBy(x => x.ParkingNumber),
+            _ => projectedQuery.OrderBy(x => x.ZoneId).ThenBy(x => x.ParkingNumber)
+        };
 
+        var result = await MyPagedList<ParkingSpotsGetAllResponse>.CreateAsync(projectedQuery, request, cancellationToken);
         return result;
     }
 
     public class ParkingSpotsGetAllRequest : MyPagedRequest
     {
         public string? Q { get; set; } = string.Empty;
+        public string? Name { get; set; } = string.Empty;
+        /// <summary>1 = Zona 1 (Vijećnica, Baščaršija), 2 = Zona 2 (Aria)</summary>
+        [FromQuery(Name = "zoneGroup")]
+        public int? ZoneGroup { get; set; }
+        public int? ZoneId { get; set; }
+        public bool? OnlyAvailable { get; set; }
+        public bool? OpenNow { get; set; }
+        public string? SortBy { get; set; } = string.Empty;
     }
 
     public class ParkingSpotsGetAllResponse
@@ -52,7 +116,8 @@ public class ParkingSpotsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBas
         public int ParkingNumber { get; set; }
         public int ParkingSpotTypeId { get; set; }
         public int ZoneId { get; set; }
+        public string ZoneName { get; set; } = string.Empty;
+        public string? DisplayName { get; set; }
         public bool IsActive { get; set; } = true;
     }
 }
-

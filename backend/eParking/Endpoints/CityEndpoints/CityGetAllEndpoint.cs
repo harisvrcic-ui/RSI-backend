@@ -18,13 +18,13 @@ public class CityGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
         var query = db.Cities
             .AsQueryable();
 
-        // Filter by search query
         if (!string.IsNullOrWhiteSpace(request.Q))
-        {
             query = query.Where(c => c.Name.Contains(request.Q));
-        }
+        if (request.CountryId.HasValue && request.CountryId.Value > 0)
+            query = query.Where(c => c.CountryId == request.CountryId.Value);
+        if (request.IsActive.HasValue)
+            query = query.Where(c => c.IsActive == request.IsActive.Value);
 
-        // Project to result type
         var projectedQuery = query.Select(c => new CityGetAllResponse
         {
             ID = c.ID,
@@ -42,6 +42,8 @@ public class CityGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     public class CityGetAllRequest : MyPagedRequest
     {
         public string? Q { get; set; } = string.Empty;
+        public int? CountryId { get; set; }
+        public bool? IsActive { get; set; }
     }
 
     public class CityGetAllResponse
