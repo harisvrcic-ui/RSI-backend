@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -347,10 +347,13 @@ namespace eParking.Migrations
                     { 5, new DateTime(2026, 1, 4, 16, 13, 33, 476, DateTimeKind.Utc).AddTicks(2102), "", "Large", 0, null }
                 });
 
-            migrationBuilder.InsertData(
-                table: "ParkingSpots",
-                columns: new[] { "ID", "CreatedAt", "IsActive", "ParkingNumber", "ParkingSpotTypeId", "UpdatedAt", "ZoneId" },
-                values: new object[] { 1, new DateTime(2026, 1, 4, 16, 13, 33, 476, DateTimeKind.Utc).AddTicks(2130), true, 1, 1, null, 1 });
+            // SQL Server: explicit ID insert requires IDENTITY_INSERT ON
+            migrationBuilder.Sql(@"
+                SET IDENTITY_INSERT ParkingSpots ON;
+                INSERT INTO ParkingSpots (ID, CreatedAt, IsActive, ParkingNumber, ParkingSpotTypeId, UpdatedAt, ZoneId)
+                VALUES (1, '2026-01-04T16:13:33.4760000Z', 1, 1, 1, NULL, 1);
+                SET IDENTITY_INSERT ParkingSpots OFF;
+            ");
 
             migrationBuilder.InsertData(
                 table: "ParkingZones",

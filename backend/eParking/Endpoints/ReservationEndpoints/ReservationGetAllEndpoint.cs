@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
@@ -40,17 +41,22 @@ public class ReservationGetAllEndpoint(ApplicationDbContext db) : MyEndpointBase
             }
         }
 
-        // Project to result type
-        var projectedQuery = query.Select(c => new ReservationGetAllResponse
-        {
-            ID = c.ID,
-            CarID = c.CarID,
-            ParkingSpotID = c.ParkingSpotID,
-            ReservationTypeID = c.ReservationTypeID,
-            StartDate = c.StartDate,
-            EndDate = c.EndDate,
-            FinalPrice = c.FinalPrice
-        });
+        // Project to result type (join Cars for UserId, join ParkingSpots for DisplayName)
+        var projectedQuery = query
+            .Join(db.Cars, r => r.CarID, c => c.ID, (r, c) => new { r, c })
+            .Join(db.ParkingSpots, rc => rc.r.ParkingSpotID, ps => ps.ID, (rc, ps) => new { rc.r, rc.c, ps })
+            .Select(x => new ReservationGetAllResponse
+            {
+                ID = x.r.ID,
+                CarID = x.r.CarID,
+                ParkingSpotID = x.r.ParkingSpotID,
+                ParkingSpotDisplayName = x.ps.DisplayName ?? ("#" + x.ps.ParkingNumber),
+                ReservationTypeID = x.r.ReservationTypeID,
+                StartDate = x.r.StartDate,
+                EndDate = x.r.EndDate,
+                FinalPrice = x.r.FinalPrice,
+                UserId = x.c.UserId
+            });
 
         // Create paginated response with filter
         var result = await MyPagedList<ReservationGetAllResponse>.CreateAsync(projectedQuery, request, cancellationToken);
@@ -73,8 +79,15 @@ public class ReservationGetAllEndpoint(ApplicationDbContext db) : MyEndpointBase
     public class ReservationGetAllResponse
     {
         public int ID { get; set; }
+
+        [JsonPropertyName("userId")]
+        public int UserId { get; set; }
         public int CarID { get; set; }
         public int ParkingSpotID { get; set; }
+
+        [JsonPropertyName("parkingSpotDisplayName")]
+        public string? ParkingSpotDisplayName { get; set; }
+
         public int ReservationTypeID { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }

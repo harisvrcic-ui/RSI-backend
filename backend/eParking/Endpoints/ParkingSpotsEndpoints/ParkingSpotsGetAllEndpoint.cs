@@ -64,11 +64,14 @@ public class ParkingSpotsGetAllEndpoint(ApplicationDbContext db, IHttpContextAcc
         if (request.OnlyAvailable == true)
             query = query.Where(x => x.spot.IsActive);
 
-        // Open now – no DB field yet; reserved for future working-hours support
+        // Open now – Baščaršija 08:00–23:00, Vijećnica i Aria 00–24 (uvijek otvoreni)
         if (request.OpenNow == true)
         {
-            // When WorkingHours exist: query = query.Where(x => IsOpenNow(x.spot));
-            // For now no filter
+            var hour = DateTime.Now.Hour;
+            var isWithinBascarsijaHours = hour >= 8 && hour < 23;
+            query = query.Where(x =>
+                (x.spot.ZoneId != 1 || x.spot.ParkingNumber != 2)  // Vijećnica ili Aria → uvijek prikaži
+                || isWithinBascarsijaHours);                        // Baščaršija (Zone 1, br. 2) samo 08–23
         }
 
         // Project to response (include ZoneName and DisplayName for display/sort/search)

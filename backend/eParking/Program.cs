@@ -21,7 +21,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(x => x.OperationFilter<MyAuthorizationSwaggerHeader>());
@@ -50,10 +51,12 @@ builder.Services.AddValidatorsFromAssemblyContaining<AuthGetEndpoint>();//moze s
 
 var app = builder.Build();
 
-// Jednokratno: Golf 7 -> Volkswagen (BrandId 3)
+// Primjena migracija pri startu (npr. nakon kloniranja s Azure DevOps)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try { db.Database.Migrate(); } catch { /* ignoriraj ako migracije već primijenjene ili DB nedostupan */ }
+
     try { db.Database.ExecuteSqlRaw("UPDATE Cars SET BrandId = 3 WHERE ID = 1 AND Model = N'Golf 7';"); } catch { /* ignoriraj ako već ažurirano */ }
     // PriceMultiplier decimal + vrijednosti: Regular 1.0, Disabled 0.5, Compact 0.9, Electric 1.3, Large 1.2
     try
@@ -71,6 +74,43 @@ using (var scope = app.Services.CreateScope())
         ");
     }
     catch { /* ignoriraj ako već ažurirano */ }
+
+    // Fallback: dodaj DisplayName i DisplayNameSearch ako tablica ParkingSpots postoji ali kolone ne (stara baza bez migracija)
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'ParkingSpots' AND COLUMN_NAME = 'DisplayName')
+                ALTER TABLE ParkingSpots ADD DisplayName nvarchar(max) NULL;
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'ParkingSpots' AND COLUMN_NAME = 'DisplayNameSearch')
+                ALTER TABLE ParkingSpots ADD DisplayNameSearch nvarchar(max) NULL;
+        ");
+    }
+    catch { /* ignoriraj ako tablica ne postoji */ }
+
+    // Ako user 2 (obični user) nema nijedan auto, dodaj jedno da može kreirati rezervacije i vidjeti ih na dashboardu
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+            IF NOT EXISTS (SELECT 1 FROM Cars WHERE UserId = 2)
+                INSERT INTO Cars (BrandId, ColorId, UserId, Model, LicensePlate, YearOfManufacture, IsActive, CreatedAt)
+                VALUES (3, 1, 2, N'Opel Astra', N'E11-K-111', 2020, 1, GETUTCDATE());
+        ");
+    }
+    catch { /* ignoriraj */ }
+
+    // Chevrolet brand i auto za Harisa (UserId 4): Chevrolet Aveo, tablice 021-A-356, 2008
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+            IF NOT EXISTS (SELECT 1 FROM Brands WHERE Name = N'Chevrolet')
+                INSERT INTO Brands (Name, IsActive, CreatedAt) VALUES (N'Chevrolet', 1, GETUTCDATE());
+            IF NOT EXISTS (SELECT 1 FROM Cars WHERE UserId = 4 AND LicensePlate = N'021-A-356')
+                INSERT INTO Cars (BrandId, ColorId, UserId, Model, LicensePlate, YearOfManufacture, IsActive, CreatedAt)
+                SELECT b.ID, 1, 4, N'Aveo', N'021-A-356', 2008, 1, GETUTCDATE()
+                FROM Brands b WHERE b.Name = N'Chevrolet';
+        ");
+    }
+    catch { /* ignoriraj */ }
 }
 
 //app.UseAuthentication();

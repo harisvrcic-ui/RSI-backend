@@ -28,8 +28,10 @@ public class ReservationUpdateOrInsertValidator : AbstractValidator<ReservationU
             .WithMessage("StartDate must be before EndDate");
 
         RuleFor(x => x.EndDate)
-            .GreaterThan(DateTime.Now)
-            .WithMessage("EndDate must be in the future");
+            .Must(endDate => endDate.Kind == DateTimeKind.Utc
+                ? endDate > DateTime.UtcNow.AddMinutes(-1)
+                : endDate.ToUniversalTime() > DateTime.UtcNow.AddMinutes(-1))
+            .WithMessage("EndDate must be in the future.");
 
         RuleFor(x => x.FinalPrice)
             .GreaterThanOrEqualTo(0)

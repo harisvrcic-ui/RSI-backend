@@ -10,24 +10,26 @@ namespace eParking.Endpoints.CarsEndpoints;
 [Route("Cars")]
 public class CarsDeleteEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<int>
-    .WithoutResult
+    .WithActionResult
 {
     [HttpDelete("{id}")]
-    public override async Task HandleAsync(int id, CancellationToken cancellationToken = default)
+    public override async Task<ActionResult> HandleAsync(int id, CancellationToken cancellationToken = default)
     {
-        var Car = await db.Cars.SingleOrDefaultAsync(x => x.ID == id, cancellationToken);
+        var car = await db.Cars.SingleOrDefaultAsync(x => x.ID == id, cancellationToken);
 
-        if (Car == null)
+        if (car == null)
         {
-            throw new KeyNotFoundException("Car not found");
+            return NotFound(new { message = "Car not found" });
         }
 
-        Car.IsActive = false;
+        // Obriši sve rezervacije ovog auta pa onda sam auto (cascade)
+        var reservationsToRemove = await db.Reservations.Where(r => r.CarID == id).ToListAsync(cancellationToken);
+        db.Reservations.RemoveRange(reservationsToRemove);
 
-
+        car.IsActive = false;
+        db.Cars.Remove(car);
         await db.SaveChangesAsync(cancellationToken);
+        return Ok();
     }
-
-
 }
 

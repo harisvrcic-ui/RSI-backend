@@ -556,14 +556,16 @@ namespace eParking.Migrations
                 columns: new[] { "CreatedAt", "DisplayName", "DisplayNameSearch" },
                 values: new object[] { new DateTime(2026, 2, 28, 22, 38, 32, 881, DateTimeKind.Utc).AddTicks(8987), "Vijećnica", "vijecnica" });
 
-            // Insert ParkingSpots 2 and 3 only if they do not exist (may exist from earlier migration)
+            // Insert ParkingSpots 2 and 3 only if they do not exist (explicit ID requires IDENTITY_INSERT ON)
             migrationBuilder.Sql(@"
+                SET IDENTITY_INSERT ParkingSpots ON;
                 IF NOT EXISTS (SELECT 1 FROM ParkingSpots WHERE ID = 2)
                     INSERT INTO ParkingSpots (ID, CreatedAt, DisplayName, DisplayNameSearch, IsActive, ParkingNumber, ParkingSpotTypeId, UpdatedAt, ZoneId)
                     VALUES (2, '2026-02-28T22:38:32.8818991Z', N'Baščaršija', N'bascarsija', 1, 2, 1, NULL, 1);
                 IF NOT EXISTS (SELECT 1 FROM ParkingSpots WHERE ID = 3)
                     INSERT INTO ParkingSpots (ID, CreatedAt, DisplayName, DisplayNameSearch, IsActive, ParkingNumber, ParkingSpotTypeId, UpdatedAt, ZoneId)
                     VALUES (3, '2026-02-28T22:38:32.8818993Z', N'Aria mall', N'aria mall', 1, 3, 1, NULL, 2);
+                SET IDENTITY_INSERT ParkingSpots OFF;
             ");
 
             migrationBuilder.UpdateData(
