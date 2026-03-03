@@ -21,8 +21,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 
 
+<<<<<<< HEAD
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
+=======
+builder.Services.AddControllers();
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(x => x.OperationFilter<MyAuthorizationSwaggerHeader>());
@@ -51,12 +55,19 @@ builder.Services.AddValidatorsFromAssemblyContaining<AuthGetEndpoint>();//moze s
 
 var app = builder.Build();
 
+<<<<<<< HEAD
 // Primjena migracija pri startu (npr. nakon kloniranja s Azure DevOps)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     try { db.Database.Migrate(); } catch { /* ignoriraj ako migracije već primijenjene ili DB nedostupan */ }
 
+=======
+// Jednokratno: Golf 7 -> Volkswagen (BrandId 3)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
     try { db.Database.ExecuteSqlRaw("UPDATE Cars SET BrandId = 3 WHERE ID = 1 AND Model = N'Golf 7';"); } catch { /* ignoriraj ako već ažurirano */ }
     // PriceMultiplier decimal + vrijednosti: Regular 1.0, Disabled 0.5, Compact 0.9, Electric 1.3, Large 1.2
     try
@@ -74,6 +85,7 @@ using (var scope = app.Services.CreateScope())
         ");
     }
     catch { /* ignoriraj ako već ažurirano */ }
+<<<<<<< HEAD
 
     // Fallback: dodaj DisplayName i DisplayNameSearch ako tablica ParkingSpots postoji ali kolone ne (stara baza bez migracija)
     try
@@ -111,6 +123,8 @@ using (var scope = app.Services.CreateScope())
         ");
     }
     catch { /* ignoriraj */ }
+=======
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
 }
 
 //app.UseAuthentication();

@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 using System.Text.Json.Serialization;
+=======
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
@@ -41,6 +44,7 @@ public class ReservationGetAllEndpoint(ApplicationDbContext db) : MyEndpointBase
             }
         }
 
+<<<<<<< HEAD
         // Project to result type (join Cars for UserId, join ParkingSpots for DisplayName)
         var projectedQuery = query
             .Join(db.Cars, r => r.CarID, c => c.ID, (r, c) => new { r, c })
@@ -57,6 +61,19 @@ public class ReservationGetAllEndpoint(ApplicationDbContext db) : MyEndpointBase
                 FinalPrice = x.r.FinalPrice,
                 UserId = x.c.UserId
             });
+=======
+        // Project to result type
+        var projectedQuery = query.Select(c => new ReservationGetAllResponse
+        {
+            ID = c.ID,
+            CarID = c.CarID,
+            ParkingSpotID = c.ParkingSpotID,
+            ReservationTypeID = c.ReservationTypeID,
+            StartDate = c.StartDate,
+            EndDate = c.EndDate,
+            FinalPrice = c.FinalPrice
+        });
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
 
         // Create paginated response with filter
         var result = await MyPagedList<ReservationGetAllResponse>.CreateAsync(projectedQuery, request, cancellationToken);
@@ -79,6 +96,7 @@ public class ReservationGetAllEndpoint(ApplicationDbContext db) : MyEndpointBase
     public class ReservationGetAllResponse
     {
         public int ID { get; set; }
+<<<<<<< HEAD
 
         [JsonPropertyName("userId")]
         public int UserId { get; set; }
@@ -88,6 +106,10 @@ public class ReservationGetAllEndpoint(ApplicationDbContext db) : MyEndpointBase
         [JsonPropertyName("parkingSpotDisplayName")]
         public string? ParkingSpotDisplayName { get; set; }
 
+=======
+        public int CarID { get; set; }
+        public int ParkingSpotID { get; set; }
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
         public int ReservationTypeID { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }

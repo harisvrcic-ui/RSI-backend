@@ -10,6 +10,7 @@ namespace eParking.Endpoints.CarsEndpoints;
 [Route("Cars")]
 public class CarsDeleteEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<int>
+<<<<<<< HEAD
     .WithActionResult
 {
     [HttpDelete("{id}")]
@@ -31,5 +32,26 @@ public class CarsDeleteEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
         await db.SaveChangesAsync(cancellationToken);
         return Ok();
     }
+=======
+    .WithoutResult
+{
+    [HttpDelete("{id}")]
+    public override async Task HandleAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var Car = await db.Cars.SingleOrDefaultAsync(x => x.ID == id, cancellationToken);
+
+        if (Car == null)
+        {
+            throw new KeyNotFoundException("Car not found");
+        }
+
+        Car.IsActive = false;
+
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
 }
 

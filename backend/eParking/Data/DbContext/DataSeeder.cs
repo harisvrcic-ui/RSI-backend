@@ -204,7 +204,11 @@ namespace eParking.Data
                 new Brand { ID = 1, Name = "Mercedes-Benz", Logo = ImageConversion.ConvertImageToByteArray("wwwroot","1.png") },
                 new Brand { ID = 2, Name = "BMW", Logo = ImageConversion.ConvertImageToByteArray("wwwroot","2.png") },
                 new Brand { ID = 3, Name = "Volkswagen", Logo = ImageConversion.ConvertImageToByteArray("wwwroot","3.png") }
+<<<<<<< HEAD
               
+=======
+
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
             );
 
 
@@ -269,6 +273,7 @@ namespace eParking.Data
                       YearOfManufacture = 2018,
                       Picture = ImageConversion.ConvertImageToByteArray("wwwroot", "golf7.jpg"),
                       IsActive = true
+<<<<<<< HEAD
                   },
                   new Cars
                   {
@@ -294,6 +299,9 @@ namespace eParking.Data
                         Picture = ImageConversion.ConvertImageToByteArray("wwwroot", "passat8.jpg"),
                         IsActive = true
                     }
+=======
+                  }
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
          );
             modelBuilder.Entity<Colors>().HasData(
                   new Colors

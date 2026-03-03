@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 using System;
+=======
+﻿using System;
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -347,6 +351,7 @@ namespace eParking.Migrations
                     { 5, new DateTime(2026, 1, 4, 16, 13, 33, 476, DateTimeKind.Utc).AddTicks(2102), "", "Large", 0, null }
                 });
 
+<<<<<<< HEAD
             // SQL Server: explicit ID insert requires IDENTITY_INSERT ON
             migrationBuilder.Sql(@"
                 SET IDENTITY_INSERT ParkingSpots ON;
@@ -354,6 +359,12 @@ namespace eParking.Migrations
                 VALUES (1, '2026-01-04T16:13:33.4760000Z', 1, 1, 1, NULL, 1);
                 SET IDENTITY_INSERT ParkingSpots OFF;
             ");
+=======
+            migrationBuilder.InsertData(
+                table: "ParkingSpots",
+                columns: new[] { "ID", "CreatedAt", "IsActive", "ParkingNumber", "ParkingSpotTypeId", "UpdatedAt", "ZoneId" },
+                values: new object[] { 1, new DateTime(2026, 1, 4, 16, 13, 33, 476, DateTimeKind.Utc).AddTicks(2130), true, 1, 1, null, 1 });
+>>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
 
             migrationBuilder.InsertData(
                 table: "ParkingZones",
