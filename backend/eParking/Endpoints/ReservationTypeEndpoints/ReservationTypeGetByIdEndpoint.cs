@@ -1,18 +1,21 @@
 using eParking.Data;
 using eParking.Data.Models;
+using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.ReservationTypeEndpoints.ReservationTypeGetByIdEndpoint;
 
 namespace eParking.Endpoints.ReservationTypeEndpoints;
 
-[Route("ReservationTypes")]
+[Route(ApiRouteConstants.ReservationTypes)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class ReservationTypeGetByIdEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<int>
     .WithActionResult<ReservationTypeGetByIdResponse>
 {
-    [HttpGet("{id}")]
+    [HttpGet(ApiRouteConstants.Id)]
     public override async Task<ActionResult<ReservationTypeGetByIdResponse>> HandleAsync(int id, CancellationToken cancellationToken = default)
     {
         var ReservationType = await db.ReservationTypes

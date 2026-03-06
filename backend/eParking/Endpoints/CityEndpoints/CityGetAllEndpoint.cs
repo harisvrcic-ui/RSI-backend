@@ -1,18 +1,20 @@
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.CityEndpoints.CityGetAllEndpoint;
 
 namespace eParking.Endpoints.CityEndpoints;
 
-[Route("cities")]
+[Route(ApiRouteConstants.Cities)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class CityGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<CityGetAllRequest>
     .WithResult<MyPagedList<CityGetAllResponse>>
 {
-    [HttpGet("filter")]
+    [HttpGet(ApiRouteConstants.Filter)]
     public override async Task<MyPagedList<CityGetAllResponse>> HandleAsync([FromQuery] CityGetAllRequest request, CancellationToken cancellationToken = default)
     {
         var query = db.Cities

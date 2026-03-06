@@ -1,14 +1,17 @@
+using eParking.Data;
+using eParking.Data.Models;
+using eParking.Helper;
+using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.GenderEndpoints.GenderUpdateOrInsertEndpoint;
-using eParking.Data;
-using eParking.Helper.Api;
-using eParking.Data.Models;
 
 namespace eParking.Endpoints.GenderEndpoints;
 
-[Route("genders")]
-public class GenderUpdateOrInsertEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
+[Route(ApiRouteConstants.Genders)]
+[MyAuthorization(isAdmin: true, isUser: false)]
+public class GenderUpdateOrInsertEndpoint(ApplicationDbContext db, IMyDistributedCacheService cache) : MyEndpointBaseAsync
     .WithRequest<GenderUpdateOrInsertRequest>
     .WithResult<GenderUpdateOrInsertResponse>
 {
@@ -42,6 +45,8 @@ public class GenderUpdateOrInsertEndpoint(ApplicationDbContext db) : MyEndpointB
         }
 
         await db.SaveChangesAsync(cancellationToken);
+
+        await cache.InvalidateGendersAsync(cancellationToken);
 
         return new GenderUpdateOrInsertResponse
         {

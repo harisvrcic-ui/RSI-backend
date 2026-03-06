@@ -1,17 +1,20 @@
 using eParking.Data;
+using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.CityEndpoints.CityGetByIdEndpoint;
 
 namespace eParking.Endpoints.CityEndpoints;
 
-[Route("cities")]
+[Route(ApiRouteConstants.Cities)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class CityGetByIdEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<int>
     .WithActionResult<CityGetByIdResponse>
 {
-    [HttpGet("{id}")]
+    [HttpGet(ApiRouteConstants.Id)]
     public override async Task<ActionResult<CityGetByIdResponse>> HandleAsync(int id, CancellationToken cancellationToken = default)
     {
         var city = await db.Cities

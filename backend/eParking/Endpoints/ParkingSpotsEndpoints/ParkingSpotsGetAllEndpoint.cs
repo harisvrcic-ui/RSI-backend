@@ -1,6 +1,7 @@
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,19 +9,20 @@ using static eParking.Endpoints.ParkingSpotsEndpoints.ParkingSpotsGetAllEndpoint
 
 namespace eParking.Endpoints.ParkingSpotsEndpoints;
 
-[Route("ParkingSpots")]
+[Route(ApiRouteConstants.ParkingSpots)]
+[MyAuthorization(isAdmin: true, isUser: true, allowAnonymous: true)]
 public class ParkingSpotsGetAllEndpoint(ApplicationDbContext db, IHttpContextAccessor httpContext) : MyEndpointBaseAsync
     .WithRequest<ParkingSpotsGetAllRequest>
     .WithResult<MyPagedList<ParkingSpotsGetAllResponse>>
 {
-    [HttpGet("filter")]
+    [HttpGet(ApiRouteConstants.Filter)]
     public override async Task<MyPagedList<ParkingSpotsGetAllResponse>> HandleAsync([FromQuery] ParkingSpotsGetAllRequest request, CancellationToken cancellationToken = default)
     {
         var query = from spot in db.ParkingSpots
                     join zone in db.ParkingZones on spot.ZoneId equals zone.ID
                     select new { spot, zone };
 
-        // Filter by name: čitaj iz query stringa ako binding ne upali; koristi DisplayNameSearch (normalizirano, bez đ/š/č)
+        // Filter by name: read from query string if binding fails; uses DisplayNameSearch (normalized, no diacritics)
         var nameFromQuery = httpContext.HttpContext?.Request.Query["name"].FirstOrDefault();
         var searchName = !string.IsNullOrWhiteSpace(request.Name)
             ? request.Name.Trim()
@@ -47,7 +49,7 @@ public class ParkingSpotsGetAllEndpoint(ApplicationDbContext db, IHttpContextAcc
                 x.spot.ParkingNumber.ToString().Contains(q));
         }
 
-        // Filter by zone: čitaj zoneGroup iz query stringa (binding na request ponekad ne upali)
+        // Filter by zone: read zoneGroup from query string (request binding sometimes fails)
         var zoneGroupFromQuery = httpContext.HttpContext?.Request.Query["zoneGroup"].FirstOrDefault();
         int? zoneFilter = null;
         if (!string.IsNullOrEmpty(zoneGroupFromQuery) && int.TryParse(zoneGroupFromQuery, out var parsed))
@@ -64,22 +66,14 @@ public class ParkingSpotsGetAllEndpoint(ApplicationDbContext db, IHttpContextAcc
         if (request.OnlyAvailable == true)
             query = query.Where(x => x.spot.IsActive);
 
-<<<<<<< HEAD
-        // Open now – Baščaršija 08:00–23:00, Vijećnica i Aria 00–24 (uvijek otvoreni)
+        // Open now – Baščaršija 08:00–23:00, Vijećnica and Aria 00–24 (always open)
         if (request.OpenNow == true)
         {
-            var hour = DateTime.Now.Hour;
+            var hour = DateTime.UtcNow.Hour;
             var isWithinBascarsijaHours = hour >= 8 && hour < 23;
             query = query.Where(x =>
-                (x.spot.ZoneId != 1 || x.spot.ParkingNumber != 2)  // Vijećnica ili Aria → uvijek prikaži
-                || isWithinBascarsijaHours);                        // Baščaršija (Zone 1, br. 2) samo 08–23
-=======
-        // Open now – no DB field yet; reserved for future working-hours support
-        if (request.OpenNow == true)
-        {
-            // When WorkingHours exist: query = query.Where(x => IsOpenNow(x.spot));
-            // For now no filter
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
+                (x.spot.ZoneId != 1 || x.spot.ParkingNumber != 2)  // Vijećnica or Aria → always show
+                || isWithinBascarsijaHours);                        // Baščaršija (Zone 1, no. 2) only 08–23
         }
 
         // Project to response (include ZoneName and DisplayName for display/sort/search)
@@ -112,7 +106,7 @@ public class ParkingSpotsGetAllEndpoint(ApplicationDbContext db, IHttpContextAcc
     {
         public string? Q { get; set; } = string.Empty;
         public string? Name { get; set; } = string.Empty;
-        /// <summary>1 = Zona 1 (Vijećnica, Baščaršija), 2 = Zona 2 (Aria)</summary>
+        /// <summary>1 = Zone 1 (Vijećnica, Baščaršija), 2 = Zone 2 (Aria)</summary>
         [FromQuery(Name = "zoneGroup")]
         public int? ZoneGroup { get; set; }
         public int? ZoneId { get; set; }

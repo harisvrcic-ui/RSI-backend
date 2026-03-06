@@ -1,4 +1,4 @@
-﻿using eParking.Data;
+using eParking.Data;
 using eParking.Data.Models;
 
 namespace eParking.Services;
@@ -6,12 +6,12 @@ namespace eParking.Services;
 public class MyAuthService(ApplicationDbContext applicationDbContext, IHttpContextAccessor httpContextAccessor) : IMyAuthService
 {
 
-    // Generisanje novog tokena za korisnika
+    // Generate new token for user
     public async Task<MyAuthenticationToken> GenerateSaveAuthToken(MyAppUser user, CancellationToken cancellationToken = default) => await MyAuthServiceHelper.GenerateSaveAuthToken(
             httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString(), applicationDbContext, user, cancellationToken
             );
 
-    // Uklanjanje tokena iz baze podataka
+    // Remove token from database
     public async Task<bool> RevokeAuthToken(string tokenValue, CancellationToken cancellationToken = default) => await MyAuthServiceHelper.RevokeAuthToken(applicationDbContext, tokenValue, cancellationToken);
 
     // Dohvatanje informacija o autentifikaciji korisnika

@@ -1,35 +1,38 @@
+using eParking.Data;
+using eParking.Data.Models;
+using eParking.Helper;
+using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.GenderEndpoints.GenderGetByIdEndpoint;
-using eParking.Data;
-using eParking.Helper.Api;
-using eParking.Data.Models;
 
 namespace eParking.Endpoints.GenderEndpoints;
 
-[Route("genders")]
+[Route(ApiRouteConstants.Genders)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class GenderGetByIdEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<GenderGetByIdRequest>
-    .WithResult<GenderGetByIdResponse>
+    .WithActionResult<GenderGetByIdResponse>
 {
-    [HttpGet("{id}")]
-    public override async Task<GenderGetByIdResponse> HandleAsync([FromRoute] GenderGetByIdRequest request, CancellationToken cancellationToken = default)
+    [HttpGet(ApiRouteConstants.Id)]
+    public override async Task<ActionResult<GenderGetByIdResponse>> HandleAsync([FromRoute] GenderGetByIdRequest request, CancellationToken cancellationToken = default)
     {
         var gender = await db.Set<Gender>()
             .FirstOrDefaultAsync(g => g.ID == request.ID, cancellationToken);
 
         if (gender == null)
         {
-            throw new Exception($"Gender with ID {request.ID} not found.");
+            return NotFound($"Gender with ID {request.ID} not found.");
         }
 
-        return new GenderGetByIdResponse
+        return Ok(new GenderGetByIdResponse
         {
             ID = gender.ID,
             Name = gender.Name,
             CreatedAt = gender.CreatedAt,
             IsActive = gender.IsActive
-        };
+        });
     }
 
     // DTO for request

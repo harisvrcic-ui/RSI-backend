@@ -1,17 +1,20 @@
+using eParking.Data;
+using eParking.Data.Models;
+using eParking.Helper;
+using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using eParking.Data;
-using eParking.Helper.Api;
-using eParking.Data.Models;
 
-namespace Festify.Endpoints.GenderEndpoints;
+namespace eParking.Endpoints.GenderEndpoints;
 
-[Route("genders")]
-public class GenderDeleteEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
+[Route(ApiRouteConstants.Genders)]
+[MyAuthorization(isAdmin: true, isUser: false)]
+public class GenderDeleteEndpoint(ApplicationDbContext db, IMyDistributedCacheService cache) : MyEndpointBaseAsync
     .WithRequest<int>
     .WithoutResult
 {
-    [HttpDelete("{id}")]
+    [HttpDelete(ApiRouteConstants.Id)]
     public override async Task HandleAsync([FromRoute] int id, CancellationToken cancellationToken = default)
     {
         var gender = await db.Set<Gender>()
@@ -28,5 +31,6 @@ public class GenderDeleteEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
 
         await db.SaveChangesAsync(cancellationToken);
 
+        await cache.InvalidateGendersAsync(cancellationToken);
     }
 }

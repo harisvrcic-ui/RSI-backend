@@ -1,6 +1,5 @@
-﻿using eParking.Helper;
+using eParking.Helper;
 using eParking.Helper.BaseClasses;
-using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -48,11 +47,11 @@ public class MyAppUser : BaseEntity
     // Timestamp for when the account might be locked (optional)
     public DateTime? LockoutUntil { get; set; }
 
-    // Helper method for password hashing
+    // Helper method for password hashing (uses same PasswordGenerator as VerifyPassword and DataSeeder)
     public void SetPassword(string password)
     {
-        var hasher = new PasswordHasher<MyAppUser>();
-        PasswordHash = hasher.HashPassword(this, password);
+        PasswordSalt = PasswordGenerator.GenerateSalt();
+        PasswordHash = PasswordGenerator.GenerateHash(PasswordSalt, password);
     }
 
     // Helper method for password verification

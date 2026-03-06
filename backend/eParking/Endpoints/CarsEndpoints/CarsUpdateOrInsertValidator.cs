@@ -17,7 +17,7 @@ public class CarsUpdateOrInsertValidator : AbstractValidator<CarsUpdateOrInsertE
             .MaximumLength(10).WithMessage("License plate cannot exceed 10 characters");
 
         RuleFor(x => x.YearOfManufacture)
-            .InclusiveBetween(1886, DateTime.Now.Year).WithMessage("Year of manufacture is invalid");
+            .InclusiveBetween(1886, DateTime.UtcNow.Year).WithMessage("Year of manufacture is invalid");
 
         RuleFor(x => x.BrandId)
             .GreaterThan(0).WithMessage("BrandId must be greater than 0");

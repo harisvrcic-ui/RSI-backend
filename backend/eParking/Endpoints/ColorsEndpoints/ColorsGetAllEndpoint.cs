@@ -1,18 +1,20 @@
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.ColorsEndpoints.ColorsGetAllEndpoint;
 
 namespace eParking.Endpoints.ColorsEndpoints;
 
-[Route("Colors")]
+[Route(ApiRouteConstants.Colors)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class ColorsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<ColorsGetAllRequest>
     .WithResult<MyPagedList<ColorsGetAllResponse>>
 {
-    [HttpGet("filter")]
+    [HttpGet(ApiRouteConstants.Filter)]
     public override async Task<MyPagedList<ColorsGetAllResponse>> HandleAsync([FromQuery] ColorsGetAllRequest request, CancellationToken cancellationToken = default)
     {
         var query = db.Colors

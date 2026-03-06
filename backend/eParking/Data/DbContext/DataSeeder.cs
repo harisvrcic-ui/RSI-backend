@@ -9,6 +9,25 @@ namespace eParking.Data
     {
         private const string DefaultPhoneNumber = "+387 00 000 000";
 
+        /// <summary>
+        /// Reads image from disk only if file exists; otherwise returns null (avoids FileNotFoundException during seed).
+        /// </summary>
+        private static byte[]? SafeGetImageBytes(string folder, string imageName)
+        {
+            string currentDirectory = Directory.GetCurrentDirectory();
+            string imagePath = Path.Combine(currentDirectory, folder, imageName);
+            if (!File.Exists(imagePath))
+                return null;
+            try
+            {
+                return File.ReadAllBytes(imagePath);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public static void SeedData(this ModelBuilder modelBuilder)
         {
             // Use a fixed date for all timestamps
@@ -201,14 +220,9 @@ namespace eParking.Data
 
             // Seed Brands 
             modelBuilder.Entity<Brand>().HasData(
-                new Brand { ID = 1, Name = "Mercedes-Benz", Logo = ImageConversion.ConvertImageToByteArray("wwwroot","1.png") },
-                new Brand { ID = 2, Name = "BMW", Logo = ImageConversion.ConvertImageToByteArray("wwwroot","2.png") },
-                new Brand { ID = 3, Name = "Volkswagen", Logo = ImageConversion.ConvertImageToByteArray("wwwroot","3.png") }
-<<<<<<< HEAD
-              
-=======
-
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
+                new Brand { ID = 1, Name = "Mercedes-Benz", Logo = SafeGetImageBytes("wwwroot","1.png") },
+                new Brand { ID = 2, Name = "BMW", Logo = SafeGetImageBytes("wwwroot","2.png") },
+                new Brand { ID = 3, Name = "Volkswagen", Logo = SafeGetImageBytes("wwwroot","3.png") }
             );
 
 
@@ -220,7 +234,7 @@ namespace eParking.Data
               new ParkingSpotType { ID = 5, Name = "Large", PriceMultiplier = 1.2m }
           );
 
-            // U bazi: Zone 1 i Zone 2 (Zone 1 = Vijećnica+Baščaršija, Zone 2 = Aria)
+            // In DB: Zone 1 and Zone 2 (Zone 1 = Vijećnica+Baščaršija, Zone 2 = Aria)
             modelBuilder.Entity<ParkingZones>().HasData(
              new ParkingZones { ID = 1, Name = "Zone 1" },
              new ParkingZones { ID = 2, Name = "Zone 2" }
@@ -271,9 +285,8 @@ namespace eParking.Data
                       Model = "Golf 7",
                       LicensePlate = "E12-K-345",
                       YearOfManufacture = 2018,
-                      Picture = ImageConversion.ConvertImageToByteArray("wwwroot", "golf7.jpg"),
+                      Picture = SafeGetImageBytes("wwwroot", "golf7.jpg"),
                       IsActive = true
-<<<<<<< HEAD
                   },
                   new Cars
                   {
@@ -284,7 +297,7 @@ namespace eParking.Data
                       Model = "X6",
                       LicensePlate = "021-A-356",
                       YearOfManufacture = 2020,
-                      Picture = ImageConversion.ConvertImageToByteArray("wwwroot", "bmw-x6.jpg"),
+                      Picture = SafeGetImageBytes("wwwroot", "bmw-x6.jpg"),
                       IsActive = true
                   },
                     new Cars
@@ -296,12 +309,9 @@ namespace eParking.Data
                         Model = "Passat 8",
                         LicensePlate = "E11-K-111",
                         YearOfManufacture = 2019,
-                        Picture = ImageConversion.ConvertImageToByteArray("wwwroot", "passat8.jpg"),
+                        Picture = SafeGetImageBytes("wwwroot", "passat8.jpg"),
                         IsActive = true
                     }
-=======
-                  }
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
          );
             modelBuilder.Entity<Colors>().HasData(
                   new Colors

@@ -1,17 +1,20 @@
 using eParking.Data;
+using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.CountryEndpoints.CountryGetByIdEndpoint;
 
 namespace eParking.Endpoints.CountryEndpoints;
 
-[Route("countries")]
+[Route(ApiRouteConstants.Countries)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class CountryGetByIdEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<CountryGetByIdRequest>
     .WithActionResult<CountryGetByIdResponse>
 {
-    [HttpGet("{id}")]
+    [HttpGet(ApiRouteConstants.Id)]
     public override async Task<ActionResult<CountryGetByIdResponse>> HandleAsync([FromRoute] CountryGetByIdRequest request, CancellationToken cancellationToken = default)
     {
         var country = await db.Countries

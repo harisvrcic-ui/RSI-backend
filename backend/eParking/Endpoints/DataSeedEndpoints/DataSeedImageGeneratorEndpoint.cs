@@ -1,19 +1,22 @@
 using eParking.Data;
 using eParking.Data.Models;
+using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
 
 namespace eParking.Endpoints.DataSeedEndpoints
 {
-    [Route("data-seed")]
+    [Route(ApiRouteConstants.DataSeed)]
+    [MyAuthorization(isAdmin: true, isUser: false)]
     public class DataSeedImageGeneratorEndpoint(ApplicationDbContext db)
         : MyEndpointBaseAsync
         .WithoutRequest
         .WithResult<string>
     {
-        [HttpPost("generate-images")]
+        [HttpPost(ApiRouteConstants.GenerateImages)]
         public override async Task<string> HandleAsync(CancellationToken cancellationToken = default)
         {
             try

@@ -1,13 +1,16 @@
 using eParking.Data;
 using eParking.Data.Models;
+using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.ReservationEndpoints.ReservationUpdateOrInsertEndpoint;
 
 namespace eParking.Endpoints.ReservationEndpoints;
 
-[Route("Reservations")]
+[Route(ApiRouteConstants.Reservations)]
+[MyAuthorization(isAdmin: true, isUser: true)]
 public class ReservationUpdateOrInsertEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<ReservationUpdateOrInsertRequest>
     .WithoutResult

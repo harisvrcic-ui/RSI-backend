@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.Json.Serialization;
 using eParking.Data;
 using eParking.Data.Models;
@@ -11,7 +11,7 @@ namespace eParking.Services
         //(ApplicationDbContext applicationDbContext, IHttpContextAccessor httpContextAccessor, MyTokenGenerator myTokenGenerator)
     {
 
-        // Generisanje novog tokena za korisnika
+        // Generate new token for user
         public static async Task<MyAuthenticationToken> GenerateSaveAuthToken(string? IpAddress, ApplicationDbContext applicationDbContext, MyAppUser user, CancellationToken cancellationToken = default)
         {
             string randomToken = MyTokenGenerator.Generate(10);
@@ -21,7 +21,7 @@ namespace eParking.Services
                 IpAddress = IpAddress ?? string.Empty,
                 Value = randomToken,
                 MyAppUser = user,
-                RecordedAt = DateTime.Now,
+                RecordedAt = DateTime.UtcNow,
             };
 
             applicationDbContext.Add(authToken);
@@ -30,7 +30,7 @@ namespace eParking.Services
             return authToken;
         }
 
-        // Uklanjanje tokena iz baze podataka
+        // Remove token from database
         public static async Task<bool> RevokeAuthToken(ApplicationDbContext applicationDbContext, string tokenValue, CancellationToken cancellationToken = default)
         {
             var authToken = await applicationDbContext.MyAuthenticationTokens
@@ -55,6 +55,7 @@ namespace eParking.Services
 
             MyAuthenticationToken? myAuthToken = applicationDbContext.MyAuthenticationTokens
                 .IgnoreQueryFilters()
+                .Include(t => t.MyAppUser)
                 .SingleOrDefault(x => x.Value == authToken);
 
             return GetAuthInfoFromTokenModel(myAuthToken);
@@ -70,7 +71,7 @@ namespace eParking.Services
 
         public static MyAuthInfo GetAuthInfoFromTokenModel(MyAuthenticationToken? myAuthToken)
         {
-            if (myAuthToken == null)
+            if (myAuthToken == null || myAuthToken.MyAppUser == null)
             {
                 return new MyAuthInfo
                 {
@@ -80,15 +81,17 @@ namespace eParking.Services
                 };
             }
 
+            var u = myAuthToken.MyAppUser;
             return new MyAuthInfo
             {
                 UserId = myAuthToken.MyAppUserId,
-                Email = myAuthToken.MyAppUser!.Email,
-                FirstName = myAuthToken.MyAppUser.FirstName,
-                LastName = myAuthToken.MyAppUser.LastName,
-                IsAdmin = myAuthToken.MyAppUser.IsAdmin,
-                IsUser = myAuthToken.MyAppUser.IsUser,
+                Email = u.Email ?? string.Empty,
+                FirstName = u.FirstName ?? string.Empty,
+                LastName = u.LastName ?? string.Empty,
+                IsAdmin = u.IsAdmin,
+                IsUser = u.IsUser,
                 IsLoggedIn = true,
+                SlikaPath = string.Empty,
             };
         }
     }

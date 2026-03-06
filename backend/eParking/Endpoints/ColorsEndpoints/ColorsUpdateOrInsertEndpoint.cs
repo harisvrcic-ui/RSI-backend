@@ -1,13 +1,16 @@
 using eParking.Data;
 using eParking.Data.Models;
+using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.ColorsEndpoints.ColorsUpdateOrInsertEndpoint;
 
 namespace eParking.Endpoints.ColorsEndpoints;
 
-[Route("Colors")]
+[Route(ApiRouteConstants.Colors)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class ColorsUpdateOrInsertEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<ColorsUpdateOrInsertRequest>
     .WithoutResult

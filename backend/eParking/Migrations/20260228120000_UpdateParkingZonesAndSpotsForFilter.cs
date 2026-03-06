@@ -8,7 +8,7 @@ namespace eParking.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Zona 1 = Vijećnica, Zona 2 = Baščaršija, Zona 3 = Aria
+            // Zone 1 = Vijećnica, Zone 2 = Baščaršija, Zone 3 = Aria
             migrationBuilder.UpdateData(
                 table: "ParkingZones",
                 keyColumn: "ID",

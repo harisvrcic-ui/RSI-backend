@@ -1,6 +1,8 @@
 using eParking.Data;
 using eParking.Data.Models;
+using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.ParkingSpotsEndpoints.ParkingSpotsUpdateOrInsertEndpoint;
@@ -8,7 +10,8 @@ using static eParking.Endpoints.CountryEndpoints.CountryUpdateOrInsertEndpoint;
 
 namespace eParking.Endpoints.ParkingSpotsEndpoints;
 
-[Route("ParkingSpots")]
+[Route(ApiRouteConstants.ParkingSpots)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class ParkingSpotsUpdateOrInsertEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<ParkingSpotsUpdateOrInsertRequest>
     .WithoutResult

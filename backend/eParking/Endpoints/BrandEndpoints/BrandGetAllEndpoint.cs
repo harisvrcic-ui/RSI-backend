@@ -1,19 +1,20 @@
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.BrandEndpoints.BrandGetAllEndpoint;
 
-
 namespace eParking.Endpoints.BrandEndpoints;
 
-[Route("brands")]
+[Route(ApiRouteConstants.Brands)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class BrandGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<BrandGetAllRequest>
     .WithResult<MyPagedList<BrandGetAllResponse>>
 {
-    [HttpGet("filter")]
+    [HttpGet(ApiRouteConstants.Filter)]
     public override async Task<MyPagedList<BrandGetAllResponse>> HandleAsync([FromQuery] BrandGetAllRequest request, CancellationToken cancellationToken = default)
     {
         var query = db.Brands

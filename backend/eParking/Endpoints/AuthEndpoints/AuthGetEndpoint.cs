@@ -1,4 +1,5 @@
-﻿using Azure;
+using Azure;
+using eParking.Helper;
 using eParking.Helper.Api;
 using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,8 @@ using static eParking.Endpoints.AuthEndpoints.AuthGetEndpoint;
 
 namespace eParking.Endpoints.AuthEndpoints;
 
-[Route("auth")]
+[Route(ApiRouteConstants.Auth)]
+[MyAuthorization(isAdmin: false, isUser: false)]
 public class AuthGetEndpoint(IMyAuthService authService) : MyEndpointBaseAsync
     .WithoutRequest
     .WithActionResult<AuthGetResponse>

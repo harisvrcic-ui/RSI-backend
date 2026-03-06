@@ -1,18 +1,21 @@
 using eParking.Data;
 using eParking.Data.Models;
+using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.ParkingSpotsEndpoints.ParkingSpotsGetByIdEndpoint;
 
 namespace eParking.Endpoints.ParkingSpotsEndpoints;
 
-[Route("ParkingSpots")]
+[Route(ApiRouteConstants.ParkingSpots)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class ParkingSpotsGetByIdEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<int>
     .WithActionResult<ParkingSpotsGetByIdResponse>
 {
-    [HttpGet("{id}")]
+    [HttpGet(ApiRouteConstants.Id)]
     public override async Task<ActionResult<ParkingSpotsGetByIdResponse>> HandleAsync(int id, CancellationToken cancellationToken = default)
     {
         var ParkingSpot = await db.ParkingSpots

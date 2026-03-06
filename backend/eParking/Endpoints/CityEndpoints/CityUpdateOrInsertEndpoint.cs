@@ -1,13 +1,16 @@
 using eParking.Data;
 using eParking.Data.Models;
+using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.CityEndpoints.CityUpdateOrInsertEndpoint;
 
 namespace eParking.Endpoints.CityEndpoints;
 
-[Route("cities")]
+[Route(ApiRouteConstants.Cities)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class CityUpdateOrInsertEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<CityUpdateOrInsertRequest>
     .WithoutResult

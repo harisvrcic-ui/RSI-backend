@@ -28,7 +28,7 @@ public class MyExtensionMethodsTests
     }
 
     [Fact]
-    public void Pluralize_WordEndingInS_AddsEs()
+    public void Pluralize_ClassWord_ReturnsClasses()
     {
         var result = "Class".Pluralize();
         Assert.Equal("Classes", result);

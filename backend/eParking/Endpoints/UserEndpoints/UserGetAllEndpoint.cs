@@ -1,24 +1,23 @@
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.UserEndpoints.UserGetAllEndpoint;
 
 namespace eParking.Endpoints.UserEndpoints;
 
-[Route("users")]
+[Route(ApiRouteConstants.Users)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class UserGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<UserGetAllRequest>
     .WithResult<MyPagedList<UserGetAllResponse>>
 {
-    [HttpGet("filter")]
+    [HttpGet(ApiRouteConstants.Filter)]
     public override async Task<MyPagedList<UserGetAllResponse>> HandleAsync([FromQuery] UserGetAllRequest request, CancellationToken cancellationToken = default)
     {
-        var query = db.MyAppUsers
-            .Include(u => u.Gender)
-            .Include(u => u.City)
-            .AsQueryable();
+        var query = db.MyAppUsers.AsQueryable();
 
         // Filter by search query
         if (!string.IsNullOrWhiteSpace(request.Q))

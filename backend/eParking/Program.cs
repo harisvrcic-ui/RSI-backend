@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.DependencyInjection;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -6,7 +7,7 @@ using eParking.Endpoints.AuthEndpoints;
 using eParking.Helper.Auth;
 using eParking.Services;
 using eParking.Data;
-//using Bookhana.SignalR;
+
 
 var config = new ConfigurationBuilder()
 .AddJsonFile("appsettings.json", false)
@@ -19,57 +20,47 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(config.GetConnectionString("db1")));
 
+// Redis distributed cache (IDistributedCache) - Caching with .NET Core and Redis
+var redisConnection = config.GetConnectionString("Redis");
+if (!string.IsNullOrWhiteSpace(redisConnection))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnection;
+        options.InstanceName = "eParking_";
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache(); // fallback when Redis is not configured (e.g. local dev)
+}
 
-
-<<<<<<< HEAD
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
-=======
-builder.Services.AddControllers();
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(x => x.OperationFilter<MyAuthorizationSwaggerHeader>());
 builder.Services.AddHttpContextAccessor();
 
-//dodajte va�e servise
+// Register application services
 builder.Services.AddTransient<IMyAuthService, MyAuthService>();
+builder.Services.AddSingleton<IMyDistributedCacheService, MyDistributedCacheService>();
 builder.Services.AddSignalR();
 
 builder.Services.AddFluentValidationAutoValidation();
 
-//pretrazuje sve validatore iz DLL fajla (tj. projekta) koji sadr�i AuthGetEndpoint.css
-builder.Services.AddValidatorsFromAssemblyContaining<AuthGetEndpoint>();//moze se navesti bilo koja klasa iz ovog projekta
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("AllowAll",
-//        policy =>
-//        {
-//            policy
-//                .AllowAnyOrigin()
-//                .AllowAnyHeader()
-//                .AllowAnyMethod();
-//        });
-//});
-
+// Scan all validators from the assembly containing AuthGetEndpoint (any class from this project can be specified)
+builder.Services.AddValidatorsFromAssemblyContaining<AuthGetEndpoint>();
 
 var app = builder.Build();
 
-<<<<<<< HEAD
-// Primjena migracija pri startu (npr. nakon kloniranja s Azure DevOps)
+// Apply migrations on startup (e.g. after cloning from Azure DevOps)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    try { db.Database.Migrate(); } catch { /* ignoriraj ako migracije već primijenjene ili DB nedostupan */ }
-
-=======
-// Jednokratno: Golf 7 -> Volkswagen (BrandId 3)
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
-    try { db.Database.ExecuteSqlRaw("UPDATE Cars SET BrandId = 3 WHERE ID = 1 AND Model = N'Golf 7';"); } catch { /* ignoriraj ako već ažurirano */ }
-    // PriceMultiplier decimal + vrijednosti: Regular 1.0, Disabled 0.5, Compact 0.9, Electric 1.3, Large 1.2
+    try { db.Database.Migrate(); } catch { /* ignore if migrations already applied or DB unavailable */ }
+    try { db.Database.ExecuteSqlRaw("UPDATE Cars SET BrandId = 3 WHERE ID = 1 AND Model = N'Golf 7';"); } catch { /* ignore if already updated */ }
+    // PriceMultiplier decimal values: Regular 1.0, Disabled 0.5, Compact 0.9, Electric 1.3, Large 1.2
     try
     {
         db.Database.ExecuteSqlRaw(@"
@@ -84,10 +75,9 @@ using (var scope = app.Services.CreateScope())
             UPDATE ParkingSpotTypes SET PriceMultiplier = 1.2 WHERE ID = 5;
         ");
     }
-    catch { /* ignoriraj ako već ažurirano */ }
-<<<<<<< HEAD
+    catch { /* ignore if already updated */ }
 
-    // Fallback: dodaj DisplayName i DisplayNameSearch ako tablica ParkingSpots postoji ali kolone ne (stara baza bez migracija)
+    // Fallback: add DisplayName and DisplayNameSearch if ParkingSpots table exists but columns do not (legacy DB without migrations)
     try
     {
         db.Database.ExecuteSqlRaw(@"
@@ -97,9 +87,9 @@ using (var scope = app.Services.CreateScope())
                 ALTER TABLE ParkingSpots ADD DisplayNameSearch nvarchar(max) NULL;
         ");
     }
-    catch { /* ignoriraj ako tablica ne postoji */ }
+    catch { /* ignore if table does not exist */ }
 
-    // Ako user 2 (obični user) nema nijedan auto, dodaj jedno da može kreirati rezervacije i vidjeti ih na dashboardu
+    // If user 2 (regular user) has no cars, add one so they can create reservations and see them on the dashboard
     try
     {
         db.Database.ExecuteSqlRaw(@"
@@ -108,26 +98,10 @@ using (var scope = app.Services.CreateScope())
                 VALUES (3, 1, 2, N'Opel Astra', N'E11-K-111', 2020, 1, GETUTCDATE());
         ");
     }
-    catch { /* ignoriraj */ }
+    catch { /* ignore */ }
 
-    // Chevrolet brand i auto za Harisa (UserId 4): Chevrolet Aveo, tablice 021-A-356, 2008
-    try
-    {
-        db.Database.ExecuteSqlRaw(@"
-            IF NOT EXISTS (SELECT 1 FROM Brands WHERE Name = N'Chevrolet')
-                INSERT INTO Brands (Name, IsActive, CreatedAt) VALUES (N'Chevrolet', 1, GETUTCDATE());
-            IF NOT EXISTS (SELECT 1 FROM Cars WHERE UserId = 4 AND LicensePlate = N'021-A-356')
-                INSERT INTO Cars (BrandId, ColorId, UserId, Model, LicensePlate, YearOfManufacture, IsActive, CreatedAt)
-                SELECT b.ID, 1, 4, N'Aveo', N'021-A-356', 2008, 1, GETUTCDATE()
-                FROM Brands b WHERE b.Name = N'Chevrolet';
-        ");
-    }
-    catch { /* ignoriraj */ }
-=======
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
 }
 
-//app.UseAuthentication();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
@@ -145,6 +119,5 @@ app.UseCors(
 app.UseAuthorization();
 
 app.MapControllers();
-//app.MapHub<MySignalrHub>("/mysginalr-hub-path");
 
 app.Run();

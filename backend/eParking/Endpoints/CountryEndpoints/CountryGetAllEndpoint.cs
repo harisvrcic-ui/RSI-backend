@@ -1,18 +1,20 @@
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.CountryEndpoints.CountryGetAllEndpoint;
 
 namespace eParking.Endpoints.CountryEndpoints;
 
-[Route("countries")]
+[Route(ApiRouteConstants.Countries)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class CountryGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<CountryGetAllRequest>
     .WithResult<MyPagedList<CountryGetAllResponse>>
 {
-    [HttpGet("filter")]
+    [HttpGet(ApiRouteConstants.Filter)]
     public override async Task<MyPagedList<CountryGetAllResponse>> HandleAsync([FromQuery] CountryGetAllRequest request, CancellationToken cancellationToken = default)
     {
         var query = db.Countries

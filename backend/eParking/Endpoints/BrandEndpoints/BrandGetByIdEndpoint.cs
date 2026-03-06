@@ -1,17 +1,20 @@
 using eParking.Data;
+using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.BrandEndpoints.BrandGetByIdEndpoint;
 
 namespace eParking.Endpoints.BrandEndpoints;
 
-[Route("brands")]
+[Route(ApiRouteConstants.Brands)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class BrandGetByIdEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<int>
     .WithActionResult<BrandGetByIdResponse>
 {
-    [HttpGet("{id}")]
+    [HttpGet(ApiRouteConstants.Id)]
     public override async Task<ActionResult<BrandGetByIdResponse>> HandleAsync(int id, CancellationToken cancellationToken = default)
     {
         var brand = await db.Brands

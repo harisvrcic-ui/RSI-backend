@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace eParking.Migrations
 {
     /// <summary>
-    /// Postavlja vrijednosti PriceMultiplier: Regular 1.0, Disabled 0.5, Compact 0.9, Electric 1.3, Large 1.2.
-    /// Pokreni: dotnet ef database update
+    /// Sets PriceMultiplier values: Regular 1.0, Disabled 0.5, Compact 0.9, Electric 1.3, Large 1.2.
+    /// Run: dotnet ef database update
     /// </summary>
     public partial class UpdatePriceMultiplierValues : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Ako kolona još nije decimal (stara migracija nije primijenjena), prvo promijeni tip
+            // If column is not yet decimal (old migration not applied), change type first
             migrationBuilder.Sql(@"
                 IF (SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'ParkingSpotTypes' AND COLUMN_NAME = 'PriceMultiplier') = 'int'
                 BEGIN

@@ -1,10 +1,8 @@
-<<<<<<< HEAD
 using System.Text.Json.Serialization;
-=======
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.CarsEndpoints.CarsGetAllEndpoint;
@@ -12,24 +10,27 @@ using static eParking.Endpoints.CarsEndpoints.CarsGetAllEndpoint;
 
 namespace eParking.Endpoints.CarsEndpoints;
 
-[Route("Cars")]
-public class CarsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
+[Route(ApiRouteConstants.Cars)]
+[MyAuthorization(isAdmin: true, isUser: true)]
+public class CarsGetAllEndpoint(ApplicationDbContext db, IMyAuthService auth) : MyEndpointBaseAsync
     .WithRequest<CarsGetAllRequest>
     .WithResult<MyPagedList<CarsGetAllResponse>>
 {
-    [HttpGet("filter")]
+    [HttpGet(ApiRouteConstants.Filter)]
     public override async Task<MyPagedList<CarsGetAllResponse>> HandleAsync([FromQuery] CarsGetAllRequest request, CancellationToken cancellationToken = default)
     {
+        var authInfo = auth.GetAuthInfoFromRequest();
+        // Korisnik (nije admin) smije vidjeti samo svoje aute
+        if (!authInfo.IsAdmin && authInfo.IsLoggedIn)
+            request.UserId = authInfo.UserId;
+
         var query = db.Cars
             .Join(db.Brands, car => car.BrandId, brand => brand.ID, (car, brand) => new { car, brand })
             .AsQueryable();
 
-<<<<<<< HEAD
         if (request.UserId.HasValue)
             query = query.Where(c => c.car.UserId == request.UserId.Value);
 
-=======
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
         // Filter by search query (model, brand name, license plate)
         if (!string.IsNullOrWhiteSpace(request.Q))
         {
@@ -40,7 +41,6 @@ public class CarsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
                 (c.car.LicensePlate != null && c.car.LicensePlate.Contains(q)));
         }
 
-<<<<<<< HEAD
         // Project to result type (BrandName/Model/LicensePlate null-safe; Picture as base64 string for consistent JSON)
         var projectedQuery = query
             .OrderBy(x => x.car.ID)
@@ -59,24 +59,6 @@ public class CarsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
             });
 
         // Create paginated response (when UserId is not sent, e.g. admin, returns all cars)
-=======
-        // Project to result type
-        var projectedQuery = query.Select(x => new CarsGetAllResponse
-        {
-            ID = x.car.ID,
-            BrandId = x.car.BrandId,
-            BrandName = x.brand.Name,
-            ColorId = x.car.ColorId,
-            UserId = x.car.UserId,
-            Model = x.car.Model,
-            LicensePlate = x.car.LicensePlate,
-            YearOfManufacture = x.car.YearOfManufacture,
-            Picture = x.car.Picture,
-            IsActive = x.car.IsActive
-        });
-
-        // Create paginated response with filter
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
         var result = await MyPagedList<CarsGetAllResponse>.CreateAsync(projectedQuery, request, cancellationToken);
 
         return result;
@@ -86,7 +68,6 @@ public class CarsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     {
         [FromQuery(Name = "q")]
         public string? Q { get; set; }
-<<<<<<< HEAD
 
         [FromQuery(Name = "userId")]
         public int? UserId { get; set; }
@@ -96,13 +77,10 @@ public class CarsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
 
         [FromQuery(Name = "pageSize")]
         public new int PageSize { get; set; } = 20;
-=======
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
     }
 
     public class CarsGetAllResponse
     {
-<<<<<<< HEAD
         [JsonPropertyName("id")]
         public int ID { get; set; }
         [JsonPropertyName("brandId")]
@@ -122,18 +100,6 @@ public class CarsGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
         [JsonPropertyName("picture")]
         public string? PictureBase64 { get; set; }
         [JsonPropertyName("isActive")]
-=======
-        public int ID { get; set; }
-        public int BrandId { get; set; }
-        public string BrandName { get; set; } = string.Empty;
-        public int ColorId { get; set; }
-        public int UserId { get; set; }
-        public string Model { get; set; } = string.Empty;
-        public string LicensePlate { get; set; } = string.Empty;
-        public int YearOfManufacture { get; set; }
-        public byte[]? Picture { get; set; }
->>>>>>> 9d8f07312ad0d0046110f2fb150f74fa5ef7b7f9
         public bool IsActive { get; set; } = true;
     }
 }
-

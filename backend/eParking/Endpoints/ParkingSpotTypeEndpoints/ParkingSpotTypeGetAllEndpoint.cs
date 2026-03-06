@@ -1,6 +1,7 @@
 using eParking.Data;
 using eParking.Helper;
 using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static eParking.Endpoints.CountryEndpoints.CountryGetAllEndpoint;
@@ -8,12 +9,13 @@ using static eParking.Endpoints.ParkingSpotTypeEndpoints.ParkingSpotTypesGetAllE
 
 namespace eParking.Endpoints.ParkingSpotTypeEndpoints;
 
-[Route("ParkingSpotTypes")]
+[Route(ApiRouteConstants.ParkingSpotTypes)]
+[MyAuthorization(isAdmin: true, isUser: false)]
 public class ParkingSpotTypesGetAllEndpoint(ApplicationDbContext db) : MyEndpointBaseAsync
     .WithRequest<ParkingSpotTypesGetAllRequest>
     .WithResult<MyPagedList<ParkingSpotTypesGetAllResponse>>
 {
-    [HttpGet("filter")]
+    [HttpGet(ApiRouteConstants.Filter)]
     public override async Task<MyPagedList<ParkingSpotTypesGetAllResponse>> HandleAsync([FromQuery] ParkingSpotTypesGetAllRequest request, CancellationToken cancellationToken = default)
     {
         var query = db.ParkingSpotTypes

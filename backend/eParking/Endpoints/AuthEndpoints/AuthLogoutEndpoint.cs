@@ -1,26 +1,28 @@
-﻿using Azure.Core;
+using Azure.Core;
+using eParking.Data;
+using eParking.Helper;
+using eParking.Helper.Api;
+using eParking.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading;
 using System.Threading.Tasks;
 using static eParking.Endpoints.AuthEndpoints.AuthLogoutEndpoint;
-using eParking.Data;
-using eParking.Helper.Api;
-using eParking.Services;
 
 namespace eParking.Endpoints.AuthEndpoints;
 
-[Route("auth")]
+[Route(ApiRouteConstants.Auth)]
+[MyAuthorization(isAdmin: false, isUser: false)]
 public class AuthLogoutEndpoint(ApplicationDbContext db, IMyAuthService authService) : MyEndpointBaseAsync
     .WithoutRequest
     .WithResult<LogoutResponse>
 {
-    [HttpPost("logout")]
+    [HttpPost(ApiRouteConstants.Logout)]
     public override async Task<LogoutResponse> HandleAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            // Dohvatanje tokena iz headera
+            // Get token from header
             string? authToken = Request.Headers["my-auth-token"];
 
             if (string.IsNullOrEmpty(authToken))
@@ -32,7 +34,7 @@ public class AuthLogoutEndpoint(ApplicationDbContext db, IMyAuthService authServ
                 };
             }
 
-            // Pokušaj revokacije tokena
+            // Attempt token revocation
             bool isRevoked = await authService.RevokeAuthToken(authToken, cancellationToken);
 
             return new LogoutResponse

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace eParking.Helper;
 
@@ -28,6 +28,12 @@ public class MyPagedList<T>
         var items = await source.Skip((pagingRequest.PageNumber - 1) * pagingRequest.PageSize).Take(pagingRequest.PageSize).ToArrayAsync(cancellationToken);
 
         return new MyPagedList<T>(items, totalCount, pagingRequest.PageNumber, pagingRequest.PageSize);
+    }
+
+    /// <summary>Reconstruction from Redis cache (data deserialized from GetString).</summary>
+    public static MyPagedList<T> FromCache(T[] dataItems, int totalCount, int currentPage, int pageSize)
+    {
+        return new MyPagedList<T>(dataItems, totalCount, currentPage, pageSize);
     }
 }
 public class MyPagedRequest

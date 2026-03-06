@@ -1,4 +1,4 @@
-﻿namespace eParking.Services;
+namespace eParking.Services;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -6,11 +6,13 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
-public class MyAuthorizationAttribute(bool isLibrarian, bool isUser) : Attribute, IAuthorizationFilter
+public class MyAuthorizationAttribute(bool isAdmin, bool isUser, bool allowAnonymous = false) : Attribute, IAuthorizationFilter
 {
     public void OnAuthorization(AuthorizationFilterContext context)
     {
-        // Dobavi MyAuthService iz servisa
+        if (allowAnonymous)
+            return;
+
         var authService = context.HttpContext.RequestServices.GetService<IMyAuthService>();
         if (authService == null)
         {
@@ -18,7 +20,6 @@ public class MyAuthorizationAttribute(bool isLibrarian, bool isUser) : Attribute
             return;
         }
 
-        // Pozovi GetAuthInfo za dobijanje korisničkih informacija na osnovu tokena
         var authInfo = authService.GetAuthInfoFromRequest();
         if (authInfo == null)
         {
@@ -26,14 +27,10 @@ public class MyAuthorizationAttribute(bool isLibrarian, bool isUser) : Attribute
             return;
         }
 
-        // Provjeri role korisnika
-        if (isLibrarian && !authInfo.IsAdmin)
-        {
-            context.Result = new ForbidResult();
-            return;
-        }
-
-        if (isUser && !authInfo.IsUser)
+        bool allowed = (!isAdmin && !isUser)
+            ? authInfo.IsLoggedIn
+            : (isAdmin && authInfo.IsAdmin) || (isUser && authInfo.IsUser);
+        if (!allowed)
         {
             context.Result = new ForbidResult();
             return;
